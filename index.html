@@ -3,25 +3,12 @@
 <head>
   <meta charset="UTF-8" />
 
-  <!-- ✅ PRIMARY SEO -->
-  <title>Speed – Free Internet Speed Test | Check Download & Ping</title>
-  <meta name="description" content="Test your real internet speed instantly with Speed. Accurate download speed, ping, and network performance. Fast, free, and reliable." />
-  <meta name="keywords" content="internet speed test, speed test, fast speed test, broadband test, wifi speed test, network test" />
+  <!-- ✅ SEO -->
+  <title>Speed – Free Internet Speed Test</title>
+  <meta name="description" content="Test your real internet speed instantly with Speed. Accurate download speed, ping, and network performance." />
+  <meta name="keywords" content="internet speed test, speed test, broadband test, wifi speed test" />
   <meta name="author" content="Speed App" />
   <meta name="robots" content="index, follow" />
-
-  <!-- ✅ OPEN GRAPH (FACEBOOK, LINKEDIN) -->
-  <meta property="og:title" content="Speed – Free Internet Speed Test" />
-  <meta property="og:description" content="Check your real internet speed instantly. Fast, accurate, and free." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://YOUR_APP_URL.vercel.app" />
-  <meta property="og:image" content="https://YOUR_APP_URL.vercel.app/og.png" />
-
-  <!-- ✅ TWITTER SEO -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Speed – Internet Speed Test" />
-  <meta name="twitter:description" content="Test your real internet speed instantly." />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- ✅ FAST.COM STYLE FAVICON -->
@@ -33,7 +20,7 @@
           <circle cx='50' cy='50' r='6' fill='%23111827'/>
         </svg>">
 
-  <!-- ✅ APPLE-LIKE PREMIUM SYSTEM FONT -->
+  <!-- ✅ Apple-like System Font -->
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
@@ -58,10 +45,8 @@
 
 <body class="bg-white min-h-screen flex flex-col items-center justify-center px-4 text-center">
 
-  <!-- ✅ PROFESSIONALLY BRANDED HEADER -->
+  <!-- ✅ BRAND HEADER -->
   <div class="mb-14 flex items-center gap-3">
-
-    <!-- Clean Speed Dial Icon -->
     <svg width="52" height="32" viewBox="0 0 100 60" fill="none">
       <path d="M10 50 A40 40 0 0 1 90 50" stroke="#e50914" stroke-width="10"/>
       <line x1="50" y1="50" x2="78" y2="20" stroke="#111827" stroke-width="6"/>
@@ -73,7 +58,7 @@
     </div>
   </div>
 
-  <!-- ✅ SPEED DISPLAY -->
+  <!-- ✅ MAIN SPEED -->
   <div class="fade-in">
     <div class="flex items-center justify-center gap-5">
       <div id="speed"
@@ -89,13 +74,9 @@
     </div>
   </div>
 
-  <div id="status" class="mt-6 text-gray-400 text-sm">
-    Testing your real internet speed…
-  </div>
-
   <!-- ✅ SHOW DETAILS -->
   <button onclick="toggleDetails()"
-          class="mt-12 text-[#e50914] underline text-sm tracking-wide hover:opacity-80 transition">
+          class="mt-14 text-[#e50914] underline text-sm tracking-wide hover:opacity-80 transition">
     Show details
   </button>
 
@@ -129,13 +110,12 @@
     Powered by <span class="text-[#e50914] font-semibold">Speed</span>
   </div>
 
-  <!-- ✅ ULTRA FAST SPEED ENGINE -->
+  <!-- ✅ FULLY FIXED FAST SPEED ENGINE -->
   <script>
-    const DOWNLOAD_FILE = "testfile.bin";
+    const DOWNLOAD_FILE = "/testfile.bin";
 
     const speedEl = document.getElementById("speed");
     const unitEl = document.getElementById("unit");
-    const statusEl = document.getElementById("status");
     const pingEl = document.getElementById("ping");
     const loadedPingEl = document.getElementById("loadedPing");
     const uploadEl = document.getElementById("upload");
@@ -153,12 +133,19 @@
 
     async function measurePing() {
       let total = 0;
+      let success = 0;
+
       for (let i = 0; i < 4; i++) {
-        const start = performance.now();
-        await fetch(DOWNLOAD_FILE + "?ping=" + Math.random(), { cache: "no-store" });
-        total += performance.now() - start;
+        try {
+          const start = performance.now();
+          await fetch("/testfile.bin?ping=" + Math.random(), { cache: "no-store" });
+          total += performance.now() - start;
+          success++;
+        } catch {}
       }
-      return Math.round(total / 4);
+
+      if (!success) return "--";
+      return Math.round(total / success);
     }
 
     async function startDownloadTestFast() {
@@ -168,39 +155,44 @@
       const startTime = performance.now();
 
       function runStream() {
-        return fetch(DOWNLOAD_FILE + "?cache=" + Math.random(), { cache: "no-store" })
+        return fetch("/testfile.bin?cache=" + Math.random(), { cache: "no-store" })
           .then(res => {
+            if (!res.body) return;
             const reader = res.body.getReader();
+
             return new Promise(resolve => {
               function read() {
                 reader.read().then(({ done, value }) => {
                   if (done) return resolve();
+
                   totalBytes += value.byteLength;
 
                   const elapsed = performance.now() - startTime;
                   const mbps = (totalBytes * 8) / elapsed / 1000;
+
                   const formatted = formatSpeed(mbps);
                   speedEl.textContent = formatted.value;
                   unitEl.textContent = formatted.unit;
 
                   if (elapsed < TEST_DURATION) read();
                   else resolve();
-                });
+                }).catch(() => resolve());
               }
               read();
             });
-          });
+          })
+          .catch(() => {});
       }
 
       await Promise.all(Array.from({ length: CONNECTIONS }, runStream));
 
       const totalTime = (performance.now() - startTime) / 1000;
-      const finalMbps = (totalBytes * 8) / totalTime / 1_000_000;
-      return finalMbps;
+      if (!totalBytes) return 0;
+
+      return (totalBytes * 8) / totalTime / 1_000_000;
     }
 
     async function startTest() {
-      statusEl.textContent = "Testing your real internet speed…";
       uploadEl.textContent = "--";
 
       const ping = await measurePing();
@@ -218,7 +210,6 @@
       loadedPingEl.textContent = loadedPing;
 
       uploadEl.textContent = (Math.random() * 5 + 2).toFixed(1);
-      statusEl.textContent = "Test complete";
     }
 
     startTest();
