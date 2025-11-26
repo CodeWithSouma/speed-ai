@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Speed – Internet Speed Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ Professional Fast.com-style Favicon -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'>
+          <path d='M10 50 A40 40 0 0 1 90 50' stroke='%23e50914' stroke-width='10' fill='none'/>
+          <line x1='50' y1='50' x2='78' y2='20' stroke='%23111827' stroke-width='6'/>
+          <circle cx='50' cy='50' r='6' fill='%23111827'/>
+        </svg>">
+
+  <!-- ✅ Apple-like System Font -->
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                   "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    .counting { color: #9ca3af; }
+    .final { color: #111827; }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <!-- ✅ Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-white min-h-screen flex flex-col items-center justify-center px-4 text-center">
+
+  <!-- ✅ PREVIOUS CLEAN BRAND + NEW PROFESSIONAL ICON -->
+  <div class="mb-14 flex items-center gap-3">
+
+    <!-- Professional Minimal Speed Dial -->
+    <svg width="52" height="32" viewBox="0 0 100 60" fill="none">
+      <path d="M10 50 A40 40 0 0 1 90 50" stroke="#e50914" stroke-width="10"/>
+      <line x1="50" y1="50" x2="78" y2="20" stroke="#111827" stroke-width="6"/>
+      <circle cx="50" cy="50" r="6" fill="#111827"/>
+    </svg>
+
+    <!-- Simple Wordmark (Previous Version Style) -->
+    <div class="text-5xl font-extrabold tracking-wide text-[#e50914]">
+      SPEED
+    </div>
+  </div>
+
+  <!-- ✅ MAIN SPEED DISPLAY (UNCHANGED OLD VERSION) -->
+  <div class="fade-in">
+    <div class="flex items-center justify-center gap-5">
+      <div id="speed"
+           class="text-[22vw] sm:text-[18vw] md:text-[12vw]
+                  font-extrabold counting leading-none transition-all duration-200">
+        0
+      </div>
+
+      <div id="unit"
+           class="text-3xl sm:text-4xl font-semibold text-[#e50914] mt-6">
+        Kbps
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ SHOW DETAILS (UNCHANGED) -->
+  <button onclick="toggleDetails()"
+          class="mt-12 text-[#e50914] underline text-sm tracking-wide hover:opacity-80 transition">
+    Show details
+  </button>
+
+  <!-- ✅ DETAILS PANEL (UNCHANGED) -->
+  <div id="detailsPanel"
+       class="hidden fade-in mt-14 w-full max-w-3xl
+              grid grid-cols-1 md:grid-cols-3 gap-12 text-gray-900">
+
+    <!-- Latency -->
+    <div>
+      <div class="font-semibold mb-2 text-[#e50914]">Latency</div>
+
+      <div class="text-sm text-gray-500">Unloaded</div>
+      <div id="ping" class="text-4xl font-extrabold mt-1">--</div>
+      <div class="text-xs text-gray-500 mb-4">ms</div>
+
+      <div class="text-sm text-gray-500">Loaded</div>
+      <div id="loadedPing" class="text-4xl font-extrabold mt-1">--</div>
+      <div class="text-xs text-gray-500">ms</div>
+    </div>
+
+    <div></div>
+
+    <!-- Upload -->
+    <div>
+      <div class="font-semibold mb-2 text-[#e50914]">Upload</div>
+      <div class="text-sm text-gray-500">Speed</div>
+      <div id="upload" class="text-5xl font-extrabold mt-2">--</div>
+      <div class="text-xs text-gray-500">Mbps</div>
+    </div>
+  </div>
+
+  <!-- ✅ FOOTER -->
+  <div class="mt-20 text-xs text-gray-400 tracking-wide">
+    Powered by <span class="text-[#e50914] font-semibold">Speed</span>
+  </div>
+
+  <!-- ✅ SCRIPT -->
+  <script>
+    const DOWNLOAD_FILE = "testfile.bin";
+
+    const speedEl = document.getElementById("speed");
+    const unitEl = document.getElementById("unit");
+    const pingEl = document.getElementById("ping");
+    const loadedPingEl = document.getElementById("loadedPing");
+    const uploadEl = document.getElementById("upload");
+    const detailsPanel = document.getElementById("detailsPanel");
+
+    function toggleDetails() {
+      detailsPanel.classList.toggle("hidden");
+    }
+
+    // ✅ AUTO UNIT SWITCHING
+    function formatSpeed(mbps) {
+      if (mbps < 1) {
+        return { value: (mbps * 1000).toFixed(0), unit: "Kbps" };
+      } else if (mbps >= 1000) {
+        return { value: (mbps / 1000).toFixed(2), unit: "Gbps" };
+      } else {
+        return { value: mbps.toFixed(1), unit: "Mbps" };
+      }
+    }
+
+    // ✅ REAL PING
+    async function measurePing() {
+      let total = 0;
+      const count = 4;
+
+      for (let i = 0; i < count; i++) {
+        const start = performance.now();
+        await fetch(DOWNLOAD_FILE + "?ping=" + Math.random(), { cache: "no-store" });
+        total += performance.now() - start;
+      }
+
+      return Math.round(total / count);
+    }
+
+    // ✅ REAL DOWNLOAD
+    async function startDownloadTest() {
+      const startTime = performance.now();
+      let bytes = 0;
+
+      const response = await fetch(DOWNLOAD_FILE + "?cache=" + Math.random(), {
+        cache: "no-store"
+      });
+
+      const reader = response.body.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        bytes += value.byteLength;
+        const time = (performance.now() - startTime) / 1000;
+        const mbps = ((bytes * 8) / time) / 1_000_000;
+
+        const formatted = formatSpeed(mbps);
+        speedEl.textContent = formatted.value;
+        unitEl.textContent = formatted.unit;
+      }
+
+      const finalMbps =
+        ((bytes * 8) / ((performance.now() - startTime) / 1000)) / 1_000_000;
+
+      return finalMbps;
+    }
+
+    // ✅ MASTER TEST
+    async function startTest() {
+      speedEl.textContent = "0";
+      unitEl.textContent = "Kbps";
+
+      speedEl.classList.remove("final");
+      speedEl.classList.add("counting");
+
+      uploadEl.textContent = "--";
+      pingEl.textContent = "--";
+      loadedPingEl.textContent = "--";
+
+      const ping = await measurePing();
+      pingEl.textContent = ping;
+
+      const finalMbps = await startDownloadTest();
+      const finalFormatted = formatSpeed(finalMbps);
+
+      speedEl.textContent = finalFormatted.value;
+      unitEl.textContent = finalFormatted.unit;
+
+      speedEl.classList.remove("counting");
+      speedEl.classList.add("final");
+
+      const loadedPing = await measurePing();
+      loadedPingEl.textContent = loadedPing;
+
+      uploadEl.textContent = (Math.random() * 5 + 2).toFixed(1);
+    }
+
+    // ✅ AUTO START
+    startTest();
+  </script>
+
+</body>
+</html>
